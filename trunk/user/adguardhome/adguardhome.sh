@@ -109,9 +109,9 @@ filters:
   name: AdGuard Simplified Domain Names filter
   id: 1
 - enabled: true
-  url: https://adaway.org/hosts.txt
-  name: AdAway
-  id: 2
+  url: https://raw.hellogithub.com/hosts
+  name: GitHub-hosts
+  id: 1666724350
 - enabled: false
   url: https://anti-ad.net/easylist.txt
   name: 'CHN: anti-AD'
