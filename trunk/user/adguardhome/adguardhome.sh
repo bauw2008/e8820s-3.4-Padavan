@@ -134,6 +134,7 @@ clients: []
 log_file: ""
 verbose: false
 schema_version: 3
+
 EEE
 	chmod 755 "$adg_file"
 fi
@@ -142,21 +143,18 @@ fi
 
 
 start_adg(){
-  mkdir -p /tmp/AdGuardHome
 	mkdir -p /etc/storage/AdGuardHome
-	if [ ! -f "/tmp/AdGuardHome/AdGuardHome" ]; then
-	cp /opt/adg/AdGuardHome /tmp/AdGuardHome/AdGuardHome
-	chmod 777 /tmp/AdGuardHome/AdGuardHome
+	chmod 777 /apt/adg/AdGuardHome
 	fi
 	getconfig
 	change_dns
 	set_iptable
 	logger -t "AdGuardHome" "运行AdGuardHome"
-	eval "/tmp/AdGuardHome/AdGuardHome -c $adg_file -w /tmp/AdGuardHome -v" &
+	eval "/apt/adg/AdGuardHome -c $adg_file -w /apt/adg -v" &
 
 }
 stop_adg(){
-rm -rf /tmp/AdGuardHome
+rm -rf /apt/adg
 killall -9 AdGuardHome
 del_dns
 clear_iptable
