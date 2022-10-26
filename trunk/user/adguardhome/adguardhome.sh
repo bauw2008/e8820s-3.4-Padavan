@@ -148,8 +148,6 @@ start_adg(){
 	cp /opt/adg/AdGuardHome /opt/tmp/AdGuardHome/AdGuardHome
 	chmod 777 /opt/tmp/AdGuardHome/AdGuardHome
 	fi
-
-	fi
 	getconfig
 	change_dns
 	set_iptable
