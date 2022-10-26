@@ -81,7 +81,6 @@ dns:
   bootstrap_dns:
   - 202.98.198.167
   - 202.98.192.67
-  - 114.114.114.114
   all_servers: true
   allowed_clients: []
   disallowed_clients: []
@@ -143,18 +142,23 @@ fi
 
 
 start_adg(){
+        mkdir -p /opt/tmp/AdGuardHome
 	mkdir -p /etc/storage/AdGuardHome
-	chmod 777 /apt/adg/AdGuardHome
+	if [ ! -f "/opt/tmp/AdGuardHome/AdGuardHome" ]; then
+	cp /opt/adg/AdGuardHome /opt/tmp/AdGuardHome/AdGuardHome
+	chmod 777 /opt/tmp/AdGuardHome/AdGuardHome
+	fi
+
 	fi
 	getconfig
 	change_dns
 	set_iptable
 	logger -t "AdGuardHome" "运行AdGuardHome"
-	eval "/apt/adg/AdGuardHome -c $adg_file -w /apt/adg -v" &
+	eval "/opt/tmp/AdGuardHome/AdGuardHome -c $adg_file -w /opt/tmp/AdGuardHome -v" &
 
 }
 stop_adg(){
-rm -rf /apt/adg
+rm -rf /apt/tmp/AdGuardHome
 killall -9 AdGuardHome
 del_dns
 clear_iptable
