@@ -134,7 +134,6 @@ clients: []
 log_file: ""
 verbose: false
 schema_version: 3
-
 EEE
 	chmod 755 "$adg_file"
 fi
@@ -143,13 +142,10 @@ fi
 
 
 start_adg(){
-    mkdir -p /tmp/AdGuardHome
-        mkdir -p opt/tmp/AdGuardHome/data
+  mkdir -p /tmp/AdGuardHome
 	mkdir -p /etc/storage/AdGuardHome
 	if [ ! -f "/tmp/AdGuardHome/AdGuardHome" ]; then
 	cp /opt/adg/AdGuardHome /tmp/AdGuardHome/AdGuardHome
-	if [ ! -f "/opt/adg/AdGuardHome/data" ]; then
-	cp /tmp/AdGuardHome/data /opt/adg/AdGuardHome/data
 	chmod 777 /tmp/AdGuardHome/AdGuardHome
 	fi
 	getconfig
