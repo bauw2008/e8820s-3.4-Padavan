@@ -79,8 +79,8 @@ dns:
   ratelimit_whitelist: []
   refuse_any: true
   bootstrap_dns:
-  - 202.98.198.167
-  - 202.98.192.67
+  - 119.29.29.29
+  - 223.5.5.5
   all_servers: true
   allowed_clients: []
   disallowed_clients: []
@@ -91,9 +91,10 @@ dns:
   safebrowsing_enabled: false
   resolveraddress: ""
   upstream_dns:
-  - 119.29.29.29
-  - 223.5.5.5
-  - 114.114.114.114
+  - tls://dns.pub
+  - https://dns.pub/dns-query
+  - tls://dns.alidns.com
+  - https://dns.alidns.com/dns-query
 tls:
   enabled: false
   server_name: ""
@@ -156,7 +157,7 @@ start_adg(){
 
 }
 stop_adg(){
-rm -rf /apt/tmp/AdGuardHome
+rm -rf /opt/tmp/AdGuardHome
 killall -9 AdGuardHome
 del_dns
 clear_iptable
