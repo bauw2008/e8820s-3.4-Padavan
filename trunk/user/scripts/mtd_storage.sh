@@ -563,6 +563,7 @@ EOF
 # Custom user hosts file
 # Example:
   10.0.0.1	op
+  10.0.0.1:3000 adg
 
 EOF
 		chmod 644 "$user_hosts"
