@@ -63,8 +63,8 @@ if [ ! -f "$adg_file" ] || [ ! -s "$adg_file" ] ; then
 	cat > "$adg_file" <<-\EEE
 bind_host: 0.0.0.0
 bind_port: 3000
-auth_name: admin	
-auth_pass: admin
+auth_name: root
+auth_pass: root
 language: zh-cn
 rlimit_nofile: 0
 dns:
@@ -109,6 +109,10 @@ filters:
   name: AdGuard Simplified Domain Names filter
   id: 1
 - enabled: true
+  url: https://adaway.org/hosts.txt
+  name: AdAway
+  id: 2
+- enabled: true
   url: https://raw.hellogithub.com/hosts
   name: GitHub-hosts
   id: 1666724350
@@ -134,28 +138,32 @@ clients: []
 log_file: ""
 verbose: false
 schema_version: 3
-
 EEE
 	chmod 755 "$adg_file"
 fi
 }
 
+
+
 start_adg(){
-        mkdir -p /opt/tmp/AdGuardHome
+        #chmod 755 /opt/adg/AdGuardHome
+	chmod 755 /media/AiDisk_a1/adg/AdGuardHome
+        mkdir -p /tmp/AdGuardHome
 	mkdir -p /etc/storage/AdGuardHome
-	if [ ! -f "/opt/tmp/AdGuardHome/AdGuardHome" ]; then
-	cp /opt/adg/AdGuardHome /opt/tmp/AdGuardHome/AdGuardHome
-	chmod 777 /opt/tmp/AdGuardHome/AdGuardHome
+	if [ ! -f "/tmp/AdGuardHome/AdGuardHome" ]; then
+	#cp /opt/adg/AdGuardHome /tmp/AdGuardHome/AdGuardHome
+	cp /media/AiDisk_a1/adg/AdGuardHome /tmp/AdGuardHome/AdGuardHome
+
 	fi
 	getconfig
 	change_dns
 	set_iptable
 	logger -t "AdGuardHome" "运行AdGuardHome"
-	eval "/opt/tmp/AdGuardHome/AdGuardHome -c $adg_file -w /opt/tmp/AdGuardHome -v" &
+	eval "/tmp/AdGuardHome/AdGuardHome -c $adg_file -w /tmp/AdGuardHome -v" &
 
 }
 stop_adg(){
-rm -rf /opt/tmp/AdGuardHome
+rm -rf /tmp/AdGuardHome
 killall -9 AdGuardHome
 del_dns
 clear_iptable
