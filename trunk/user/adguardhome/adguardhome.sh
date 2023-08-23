@@ -6,15 +6,15 @@ sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
 sed -i '/server=127.0.0.1/d' /etc/storage/dnsmasq/dnsmasq.conf
 cat >> /etc/storage/dnsmasq/dnsmasq.conf << EOF
 no-resolv
-server=127.0.0.1#5335
+server=127.0.0.1#1745
 EOF
 /sbin/restart_dhcpd
-logger -t "AdGuardHome" "添加DNS转发到5335端口"
+logger -t "AdGuardHome" "添加DNS转发到1745端口"
 fi
 }
 del_dns() {
 sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
-sed -i '/server=127.0.0.1#5335/d' /etc/storage/dnsmasq/dnsmasq.conf
+sed -i '/server=127.0.0.1#1745/d' /etc/storage/dnsmasq/dnsmasq.conf
 /sbin/restart_dhcpd
 }
 
@@ -24,15 +24,15 @@ set_iptable()
 	IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
 	for IP in $IPS
 	do
-		iptables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
-		iptables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
+		iptables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports 1745 >/dev/null 2>&1
+		iptables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports 1745 >/dev/null 2>&1
 	done
 
 	IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
 	for IP in $IPS
 	do
-		ip6tables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
-		ip6tables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
+		ip6tables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports 1745 >/dev/null 2>&1
+		ip6tables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports 1745 >/dev/null 2>&1
 	done
     logger -t "AdGuardHome" "重定向53端口"
     fi
@@ -40,7 +40,7 @@ set_iptable()
 
 clear_iptable()
 {
-	OLD_PORT="5335"
+	OLD_PORT="1745"
 	IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
 	for IP in $IPS
 	do
@@ -69,7 +69,7 @@ language: zh-cn
 rlimit_nofile: 0
 dns:
   bind_host: 0.0.0.0
-  port: 5335
+  port: 1745
   protection_enabled: true
   filtering_enabled: true
   blocking_mode: nxdomain
@@ -79,7 +79,6 @@ dns:
   ratelimit_whitelist: []
   refuse_any: true
   bootstrap_dns:
-  - 119.29.29.29
   - 223.5.5.5
   all_servers: true
   allowed_clients: []
@@ -95,6 +94,8 @@ dns:
   - https://dns.pub/dns-query
   - tls://dns.alidns.com
   - https://dns.alidns.com/dns-query
+  - 2400:3200::1
+  - 240c::6666
 tls:
   enabled: false
   server_name: ""
@@ -106,25 +107,124 @@ tls:
 filters:
 - enabled: true
   url: https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
-  name: AdGuard Simplified Domain Names filter
-  id: 1
+  name: AdGuard DNS filter
+  id: 1628750870
 - enabled: true
-  url: https://adaway.org/hosts.txt
-  name: AdAway
-  id: 2
-- enabled: true
+  url: https://anti-ad.net/easylist.txt
+  name: 'CHN: anti-AD'
+  id: 1628750871
+- enabled: false
   url: https://raw.hellogithub.com/hosts
   name: GitHub-hosts
   id: 1666724350
-- enabled: false
-  url: https://anti-ad.net/easylist.txt
-  name: 'CHN: anti-AD'
-  id: 1666257450
 - enabled: true
   url: https://cats-team.github.io/AdRules/dns.txt
   name: AdRules
   id: 1666257451
-user_rules: []
+- enabled: false
+  url: https://adrules.top/hosts.txt
+  name: adrules-hosts
+  id: 1677725146
+- enabled: false
+  url: https://adrules.top/dns.txt
+  name: adrules-dns
+  id: 1677725147
+- enabled: false
+  url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_27.txt
+  name: OISD Blocklist Full
+  id: 1677725150
+user_rules:
+- '#屏蔽苹果OTA更新#'
+- '||xp.apple.com^'
+- '||mesu.apple.com^'
+- '||.apple.com^'
+- '||ocsp.apple.com^'
+- '||appldnld.apple.com^'
+- '||world-gen.g.aaplimg.com^'
+- '# 酷安信息流及评论区广告#'
+- '||ctobsnssdk.com^'
+- '||pangolin.snssdk.com^'
+- '||pangolin-sdk-toutiao.com^'
+- '||pangolin-sdk-toutiao-b.com^'
+- '||pglstatp-toutiao.com^'
+- '||dm.toutiao.com^'
+- '||ulogs.umeng.com^'
+- '||aaid.umeng.com^'
+- '||tnc*.zijieapi.com^'
+- '||mssdk-bu.bytedance.com^'
+- '#穿山甲#'
+- '||wxsnsdy.wxs.qq.com^'
+- '||wxa.wxs.qq.com^'
+- '||wxsnsdythumb.wxs.qq.com^'
+- '||is.snssdk.com^'
+- '||i.snssdk.com^'
+- '||p3-tt.byteimg.com^'
+- '||success.ctobsnssdk.com^'
+- '||sf16-static.i18n-pglstatp.com^'
+- '||sf3-fe-tos.pglstatp-toutiao.com^'
+- '||ad.zijieapi.com^'
+- '||api-access.pangolin-sdk-toutiao.com^'
+- '||mobads.baidu.com^'
+- '||ad.qq.com^'
+- '||ks.pull.yximgs.com^'
+- '||open.e.kuaishou.com^'
+- '||open.e.kuaishou.cn^'
+- '||open.e.kuaishou^'
+- '||open.kwaizt.com^'
+- '||bd.pull.yximgs.com^'
+- '||jstatic.3.cn^'
+- '||p1-lm.adukwai.com^'
+- '||p2-lm.adukwai.com^'
+- '||p3-lm.adukwai.com^'
+- '||p4-lm.adukwai.com^'
+- '||p5-lm.adukwai.com^'
+- '||m.jingxi.com^'
+- '||chat1.jd.com^'
+- '||www.csjplatform.com^'
+- '||xlmzc.cnjp-exp.com^'
+- '||lm10111.jtrincc.cn^'
+- '||ali-ad.a.yximgs.com^'
+- '||qqdata.ab.qq.com^'
+- '||tx-ad.a.yximgs.com^'
+- '||p1-lm.adkwai.com^'
+- '||video-dsp.pddpic.com^'
+- '||v1-lm.adukwai.com^'
+- '||v2-lm.adukwai.com^'
+- '||v3-lm.adukwai.com^'
+- '||v4-lm.adukwai.com^'
+- '||v5-lm.adukwai.com^'
+- '||pgdt.ugdtimg.com^'
+- '||tx-kmpaudio.pull.yximgs.com^'
+- '||hmma.baidu.com^'
+- '||apiyd.my91app.com^'
+- '||open.kuaishouzt^'
+- '||qzs.gdtimg.com^'
+- '||sdkoptedge.chinanetcenter.com^'
+- '||roi.soulapp.cn^'
+- '||bd.pull.yximgs.com^'
+- '||bd-adaptive.pull.yximgs.com^'
+- '||bd-livemate.pull.yximgs.com^'
+- '||bd-origin.pull.yximgs.com^'
+- '||bd-pclivemate.pull.yximgs.com^'
+- '||bd-proxy.pull.yximgs.com^'
+- '||bd-rwk.pull.etoote.com^'
+- '||httpdns.bcelive.com^'
+- '||skdisplay.jd.com^'
+- '||p9-be-pack-sign.pglstatp-toutiao.com^'
+- '||v6-be-pack.pglstatp-toutiao.com^'
+- '||log-api.pangolin-sdk-toutiao-b.com^'
+- '||api-access.pangolin-sdk-toutiao-b.com^'
+- '||pangolin-sdk-toutiao-b.com^'
+- '||pig.pupuapi.com^'
+- '||pglstatp-toutiao.com^'
+- '||thumb.1010pic.com^'
+- '||thumb2018.1010pic.com^'
+- '||1010pic.com^'
+- '# 电视白名单 #'
+- '@@||jiexi.bulisite.top^$important'
+- '@@||jiexi.bulisite.top^$client=''127.0.0.1'''
+- '@@||dm-hl.toutiao.com^$important'
+- ""
 dhcp:
   enabled: false
   interface_name: ""
