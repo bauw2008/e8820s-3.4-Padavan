@@ -275,7 +275,7 @@ dl_adg(){
     fi
 
     logger -t "AdGuardHome" "AdGuardHome下载成功。"
-    chmod 777 /tmp/AdGuardHome/AdGuardHome
+    chmod 755 /tmp/AdGuardHome/AdGuardHome
 }
 
 start_adg(){
