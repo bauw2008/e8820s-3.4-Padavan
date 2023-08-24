@@ -244,48 +244,49 @@ fi
 }
 
 dl_adg(){
-    if [ -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
+    if [ -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
         logger -t "AdGuardHome" "本地已存在AdGuardHome核心文件，无需下载。"
-        chmod 755 /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome
+        chmod 755 /media/AiDisk_a1/nas/adg/AdGuardHome
         return
     fi
 
     logger -t "AdGuardHome" "下载AdGuardHome"
-    wget --no-check-certificate -O /tmp/AdGuardHome.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.106.0/AdGuardHome_linux_mipsle_softfloat.tar.gz
-    if [ ! -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
+    wget --no-check-certificate -O /media/AiDisk_a1/nas/adg/AdGuardHome_linux_mipsle_softfloat.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.106.0/AdGuardHome_linux_mipsle_softfloat.tar.gz
+    if [ ! -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
         logger -t "AdGuardHome" "从GitHub下载AdGuardHome失败，请检查是否能正常访问GitHub!"
-        curl -k -s -o /tmp/AdGuardHome/AdGuardHome --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/bauw2008/e8820s-3.4-Padavan/trunk/user/adguardhome/AdGuardHome
-        if [ ! -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
+        curl -k -s -o /media/AiDisk_a1/nas/adg/AdGuardHome --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/bauw2008/e8820s-3.4-Padavan/trunk/user/adguardhome/AdGuardHome
+        if [ ! -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
             logger -t "AdGuardHome" "从CDN下载AdGuardHome失败，请检查是否能正常访问CDN!程序将退出。"
             nvram set adg_enable=0
             exit 0
         fi
     fi
 
-    tar -xzf /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome.tar.gz -C /media/AiDisk_a1/nas/AdGuardHome/
-    if [ ! -f "/media/AiDisk_a1/nas/AdGuardHome/" ]; then
+    tar -xzf /media/AiDisk_a1/nas/adg/AdGuardHome_linux_mipsle_softfloat.tar.gz -C /media/AiDisk_a1/nas/adg/
+    if [ ! -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
         logger -t "AdGuardHome" "解压缩AdGuardHome失败，请检查压缩包是否有效。程序将退出。"
         nvram set adg_enable=0
         exit 0
     fi
 
     logger -t "AdGuardHome" "AdGuardHome下载成功。"
-    chmod 755 /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome
+    chmod 755 /media/AiDisk_a1/nas/adg/AdGuardHome
 }
-
 
 start_adg(){
     mkdir -p /etc/storage/AdGuardHome
     
-    if [ ! -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
+    if [ ! -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
         dl_adg
     fi
 
+    # 导入或定义 getconfig, change_dns 和 set_iptable 函数
     getconfig
     change_dns
     set_iptable
+    
     logger -t "AdGuardHome" "运行AdGuardHome"
-    eval "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome -c $adg_file -w /media/AiDisk_a1/nas/AdGuardHome -v" &
+    eval "/media/AiDisk_a1/nas/adg/AdGuardHome -c $adg_file -w /media/AiDisk_a1/nas/adg -v" &
 }
 
 stop_adg(){
@@ -305,3 +306,4 @@ stop)
     echo "check"
     ;;
 esac
+
