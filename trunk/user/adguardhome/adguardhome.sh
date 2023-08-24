@@ -244,48 +244,64 @@ fi
 }
 
 dl_adg(){
-logger -t "AdGuardHome" "下载AdGuardHome"
-#wget --no-check-certificate -O /tmp/AdGuardHome.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.101.0/AdGuardHome_linux_mipsle.tar.gz
-curl -k -s -o /tmp/AdGuardHome/AdGuardHome --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/chongshengB/rt-n56u/trunk/user/adguardhome/AdGuardHome
-if [ ! -f "/tmp/AdGuardHome/AdGuardHome" ]; then
-logger -t "AdGuardHome" "AdGuardHome下载失败，请检查是否能正常访问github!程序将退出。"
-nvram set adg_enable=0
-exit 0
-else
-logger -t "AdGuardHome" "AdGuardHome下载成功。"
-chmod 777 /tmp/AdGuardHome/AdGuardHome
-fi
+    if [ -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
+        logger -t "AdGuardHome" "本地已存在AdGuardHome核心文件，无需下载。"
+        chmod 777 /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome
+        return
+    fi
+
+    logger -t "AdGuardHome" "下载AdGuardHome"
+    wget --no-check-certificate -O /tmp/AdGuardHome.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.104.3/AdGuardHome_linux_mipsle_softfloat.tar.gz
+    if [ ! -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
+        logger -t "AdGuardHome" "从GitHub下载AdGuardHome失败，请检查是否能正常访问GitHub!"
+        curl -k -s -o /tmp/AdGuardHome/AdGuardHome --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/chongshengB/rt-n56u/trunk/user/adguardhome/AdGuardHome
+        if [ ! -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
+            logger -t "AdGuardHome" "从CDN下载AdGuardHome失败，请检查是否能正常访问CDN!程序将退出。"
+            nvram set adg_enable=0
+            exit 0
+        fi
+    fi
+
+    tar -xzf /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome.tar.gz -C /media/AiDisk_a1/nas/AdGuardHome/
+    if [ ! -f "/media/AiDisk_a1/nas/AdGuardHome/" ]; then
+        logger -t "AdGuardHome" "解压缩AdGuardHome失败，请检查压缩包是否有效。程序将退出。"
+        nvram set adg_enable=0
+        exit 0
+    fi
+
+    logger -t "AdGuardHome" "AdGuardHome下载成功。"
+    chmod 777 /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome
 }
+
 
 start_adg(){
-    mkdir -p /tmp/AdGuardHome
-	mkdir -p /etc/storage/AdGuardHome
-	if [ ! -f "/tmp/AdGuardHome/AdGuardHome" ]; then
-	dl_adg
-	fi
-	getconfig
-	change_dns
-	set_iptable
-	logger -t "AdGuardHome" "运行AdGuardHome"
-	eval "/tmp/AdGuardHome/AdGuardHome -c $adg_file -w /tmp/AdGuardHome -v" &
+    mkdir -p /etc/storage/AdGuardHome
+    
+    if [ ! -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
+        dl_adg
+    fi
 
+    getconfig
+    change_dns
+    set_iptable
+    logger -t "AdGuardHome" "运行AdGuardHome"
+    eval "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome -c $adg_file -w /media/AiDisk_a1/nas/AdGuardHome -v" &
 }
+
 stop_adg(){
-rm -rf /tmp/AdGuardHome
-killall -9 AdGuardHome
-del_dns
-clear_iptable
+    killall -9 AdGuardHome
+    del_dns
+    clear_iptable
 }
-
 
 case $1 in
 start)
-	start_adg
-	;;
+    start_adg
+    ;;
 stop)
-	stop_adg
-	;;
+    stop_adg
+    ;;
 *)
-	echo "check"
-	;;
+    echo "check"
+    ;;
 esac
