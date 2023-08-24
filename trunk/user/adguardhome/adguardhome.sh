@@ -244,52 +244,57 @@ fi
 }
 
 dl_adg(){
-    if [ -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
-        logger -t "AdGuardHome" "本地已存在AdGuardHome核心文件，无需下载。"
-        chmod 755 /media/AiDisk_a1/nas/adg/AdGuardHome
-        return
-    fi
-
     logger -t "AdGuardHome" "下载AdGuardHome"
-    wget --no-check-certificate -O /media/AiDisk_a1/nas/adg/AdGuardHome_linux_mipsle_softfloat.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.106.0/AdGuardHome_linux_mipsle_softfloat.tar.gz
-    if [ ! -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
-        logger -t "AdGuardHome" "从GitHub下载AdGuardHome失败，请检查是否能正常访问GitHub!"
-        curl -k -s -o /media/AiDisk_a1/nas/adg/AdGuardHome --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/bauw2008/e8820s-3.4-Padavan/trunk/user/adguardhome/AdGuardHome
+
+    # 尝试从本地地址下载
+    if [ -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
+        cp /media/AiDisk_a1/nas/adg/AdGuardHome /tmp/AdGuardHome/AdGuardHome
+    else
+        logger -t "AdGuardHome" "本地AdGuardHome文件不存在，尝试从网络下载"
+        
+        # 第一选择（网络下载）
+        if ! wget --no-check-certificate -O /media/AiDisk_a1/nas/adg/AdGuardHome_linux_mipsle_softfloat.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.106.0/AdGuardHome_linux_mipsle_softfloat.tar.gz; then
+            logger -t "AdGuardHome" "第一选择网络下载失败，尝试第二选择"
+
+            # 第二选择（网络下载）
+            if ! wget --no-check-certificate -O /tmp/AdGuardHome/AdGuardHome https://cdn.jsdelivr.net/gh/bauw2008/e8820s-3.4-Padavan/trunk/user/adguardhome/AdGuardHome; then
+                logger -t "AdGuardHome" "AdGuardHome下载失败，请检查是否能正常访问下载源!程序将退出。"
+                nvram set adg_enable=0
+                exit 0
+            fi
+        fi
+
+        # 解压缩
+        tar -xzf /media/AiDisk_a1/nas/adg/AdGuardHome_linux_mipsle_softfloat.tar.gz -C /media/AiDisk_a1/nas/adg/
         if [ ! -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
-            logger -t "AdGuardHome" "从CDN下载AdGuardHome失败，请检查是否能正常访问CDN!程序将退出。"
+            logger -t "AdGuardHome" "解压缩AdGuardHome失败，请检查压缩包是否有效。程序将退出。"
             nvram set adg_enable=0
             exit 0
         fi
-    fi
 
-    tar -xzf /media/AiDisk_a1/nas/adg/AdGuardHome_linux_mipsle_softfloat.tar.gz -C /media/AiDisk_a1/nas/adg/
-    if [ ! -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
-        logger -t "AdGuardHome" "解压缩AdGuardHome失败，请检查压缩包是否有效。程序将退出。"
-        nvram set adg_enable=0
-        exit 0
+        # 将解压后的文件复制到 /tmp/AdGuardHome 目录中
+        cp /media/AiDisk_a1/nas/adg/AdGuardHome /tmp/AdGuardHome/AdGuardHome
     fi
 
     logger -t "AdGuardHome" "AdGuardHome下载成功。"
-    chmod 755 /media/AiDisk_a1/nas/adg/AdGuardHome
+    chmod 777 /tmp/AdGuardHome/AdGuardHome
 }
 
 start_adg(){
+    mkdir -p /tmp/AdGuardHome
     mkdir -p /etc/storage/AdGuardHome
-    
-    if [ ! -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
+    if [ ! -f "/tmp/AdGuardHome/AdGuardHome" ]; then
         dl_adg
     fi
-
-    # 导入或定义 getconfig, change_dns 和 set_iptable 函数
     getconfig
     change_dns
     set_iptable
-    
     logger -t "AdGuardHome" "运行AdGuardHome"
-    eval "/media/AiDisk_a1/nas/adg/AdGuardHome -c $adg_file -w /media/AiDisk_a1/nas/adg -v" &
+    eval "/tmp/AdGuardHome/AdGuardHome -c $adg_file -w /tmp/AdGuardHome -v" &
 }
 
 stop_adg(){
+    rm -rf /tmp/AdGuardHome
     killall -9 AdGuardHome
     del_dns
     clear_iptable
@@ -306,4 +311,3 @@ stop)
     echo "check"
     ;;
 esac
-
