@@ -246,7 +246,7 @@ fi
 dl_adg(){
     if [ -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
         logger -t "AdGuardHome" "本地已存在AdGuardHome核心文件，无需下载。"
-        chmod 777 /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome
+        chmod 755 /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome
         return
     fi
 
@@ -270,7 +270,7 @@ dl_adg(){
     fi
 
     logger -t "AdGuardHome" "AdGuardHome下载成功。"
-    chmod 777 /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome
+    chmod 755 /media/AiDisk_a1/nas/AdGuardHome/AdGuardHome
 }
 
 
