@@ -251,7 +251,7 @@ dl_adg(){
     fi
 
     logger -t "AdGuardHome" "下载AdGuardHome"
-    wget --no-check-certificate -O /tmp/AdGuardHome.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.104.3/AdGuardHome_linux_mipsle_softfloat.tar.gz
+    wget --no-check-certificate -O /tmp/AdGuardHome.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.106.0/AdGuardHome_linux_mipsle_softfloat.tar.gz
     if [ ! -f "/media/AiDisk_a1/nas/AdGuardHome/AdGuardHome" ]; then
         logger -t "AdGuardHome" "从GitHub下载AdGuardHome失败，请检查是否能正常访问GitHub!"
         curl -k -s -o /tmp/AdGuardHome/AdGuardHome --connect-timeout 10 --retry 3 https://cdn.jsdelivr.net/gh/bauw2008/e8820s-3.4-Padavan/trunk/user/adguardhome/AdGuardHome
