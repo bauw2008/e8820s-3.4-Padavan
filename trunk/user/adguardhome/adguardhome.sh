@@ -1,41 +1,42 @@
 #!/bin/sh
 
 change_dns() {
-if [ "$(nvram get adg_redirect)" = 1 ]; then
-sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
-sed -i '/server=127.0.0.1/d' /etc/storage/dnsmasq/dnsmasq.conf
-cat >> /etc/storage/dnsmasq/dnsmasq.conf << EOF
+  if [ "$(nvram get adg_redirect)" = 1 ]; then
+    sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
+    sed -i '/server=127.0.0.1/d' /etc/storage/dnsmasq/dnsmasq.conf
+    cat >> /etc/storage/dnsmasq/dnsmasq.conf << EOF
 no-resolv
 server=127.0.0.1#5335
 EOF
-/sbin/restart_dhcpd
-logger -t "AdGuardHome" "添加DNS转发到5335端口"
-fi
+    /sbin/restart_dhcpd
+    logger -t "AdGuardHome" "添加DNS转发到5335端口"
+  fi
 }
+
 del_dns() {
-sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
-sed -i '/server=127.0.0.1#5335/d' /etc/storage/dnsmasq/dnsmasq.conf
-/sbin/restart_dhcpd
+  sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
+  sed -i '/server=127.0.0.1#5335/d' /etc/storage/dnsmasq/dnsmasq.conf
+  /sbin/restart_dhcpd
 }
 
 set_iptable()
 {
-    if [ "$(nvram get adg_redirect)" = 2 ]; then
-	IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
-	for IP in $IPS
-	do
-		iptables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
-		iptables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
-	done
+  if [ "$(nvram get adg_redirect)" = 2 ]; then
+    IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
+    for IP in $IPS
+    do
+      iptables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
+      iptables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
+    done
 
-	IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
-	for IP in $IPS
-	do
-		ip6tables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
-		ip6tables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
-	done
-    logger -t "AdGuardHome" "重定向53端口"
-    fi
+    IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
+    for IP in $IPS
+    do
+      ip6tables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
+      ip6tables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports 5335 >/dev/null 2>&1
+    done
+      logger -t "AdGuardHome" "重定向53端口"
+  fi
 }
 
 clear_iptable()
@@ -54,7 +55,6 @@ clear_iptable()
 		ip6tables -t nat -D PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
 		ip6tables -t nat -D PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
 	done
-	
 }
 
 getconfig(){
@@ -241,71 +241,32 @@ EEE
 fi
 }
 
-dl_adg(){
-    logger -t "AdGuardHome" "下载AdGuardHome"
-
-    # 尝试从本地地址下载
-    if [ -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
-        cp /media/AiDisk_a1/nas/adg/AdGuardHome /tmp/AdGuardHome/AdGuardHome
-    else
-        logger -t "AdGuardHome" "本地AdGuardHome文件不存在，尝试从网络下载"
-        
-        # 第一选择（网络下载）
-        if ! wget --no-check-certificate -O /media/AiDisk_a1/nas/adg/AdGuardHome_linux_mipsle_softfloat.tar.gz https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.106.0/AdGuardHome_linux_mipsle_softfloat.tar.gz; then
-            logger -t "AdGuardHome" "第一选择网络下载失败，尝试第二选择"
-
-            # 第二选择（网络下载）
-            if ! wget --no-check-certificate -O /tmp/AdGuardHome/AdGuardHome https://cdn.jsdelivr.net/gh/bauw2008/e8820s-3.4-Padavan/trunk/user/adguardhome/AdGuardHome; then
-                logger -t "AdGuardHome" "AdGuardHome下载失败，请检查是否能正常访问下载源!程序将退出。"
-                nvram set adg_enable=0
-                exit 0
-            fi
-        fi
-
-        # 解压缩
-        tar -xzf /media/AiDisk_a1/nas/adg/AdGuardHome_linux_mipsle_softfloat.tar.gz -C /media/AiDisk_a1/nas/adg/
-        if [ ! -f "/media/AiDisk_a1/nas/adg/AdGuardHome" ]; then
-            logger -t "AdGuardHome" "解压缩AdGuardHome失败，请检查压缩包是否有效。程序将退出。"
-            nvram set adg_enable=0
-            exit 0
-        fi
-
-        # 将解压后的文件复制到 /tmp/AdGuardHome 目录中
-        cp /media/AiDisk_a1/nas/adg/AdGuardHome /tmp/AdGuardHome/AdGuardHome
-    fi
-
-    logger -t "AdGuardHome" "AdGuardHome下载成功。"
-    chmod 755 /tmp/AdGuardHome/AdGuardHome
-}
-
 start_adg(){
-    mkdir -p /tmp/AdGuardHome
-    mkdir -p /etc/storage/AdGuardHome
-    if [ ! -f "/tmp/AdGuardHome/AdGuardHome" ]; then
-        dl_adg
-    fi
-    getconfig
-    change_dns
-    set_iptable
-    logger -t "AdGuardHome" "运行AdGuardHome"
-    eval "/tmp/AdGuardHome/AdGuardHome -c $adg_file -w /tmp/AdGuardHome -v" &
+  mkdir -p /tmp/AdGuardHome
+	mkdir -p /etc/storage/AdGuardHome
+	getconfig
+	change_dns
+	set_iptable
+	logger -t "AdGuardHome" "启动 AdGuardHome"
+	eval "AdGuardHome -c $adg_file -w /tmp/AdGuardHome -v" &
 }
 
 stop_adg(){
-    rm -rf /tmp/AdGuardHome
-    killall -9 AdGuardHome
-    del_dns
-    clear_iptable
+  rm -rf /tmp/AdGuardHome
+  logger -t "AdGuardHome" "停止 AdGuardHome"
+  killall -9 AdGuardHome
+  del_dns
+  clear_iptable
 }
 
 case $1 in
 start)
-    start_adg
-    ;;
+	start_adg
+	;;
 stop)
-    stop_adg
-    ;;
+	stop_adg
+	;;
 *)
-    echo "check"
-    ;;
+	echo "check"
+	;;
 esac
